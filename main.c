@@ -7,6 +7,7 @@
 int rand_row();
 int rand_column();
 int isDuplicate(int, int *, int);
+int RobberMove(int);
 
 int row, column;
 int sheriffNum, copsNum=0, maxCops=0;
@@ -50,7 +51,10 @@ int main() {
     do{
         robberPos= rand_row()*1000+ rand_column();
     }while(isDuplicate(count+1, poses, robberPos));
-    //printf("\n%d\n", robberPos);
+    printf("\n%d\n", robberPos);
+
+    robberPos= RobberMove(robberPos);
+    printf("%d",robberPos);
     return 0;
 }
 
@@ -73,4 +77,69 @@ int isDuplicate(int count, int *ptr, int value){
         }
     }
     return 0;
+}
+
+int RobberMove(int robberPos) {
+    here:
+    ;
+    int move;
+    move = (int) (((float) rand() / RAND_MAX) * 8) + 1;
+    int colVar = robberPos % 1000;
+    int rowVar = robberPos / 1000;
+    switch (move) {
+        case 1:
+            if (rowVar == 1) {
+                goto here;
+            }
+            rowVar--;
+            break;
+        case 2:
+            if (colVar == column || rowVar == 1) {
+                goto here;
+            }
+            colVar++;
+            rowVar--;
+            break;
+        case 3:
+            if (colVar == column) {
+                goto here;
+            }
+            colVar++;
+            break;
+        case 4:
+            if (colVar == column || rowVar == row) {
+                goto here;
+            }
+            colVar++;
+            rowVar++;
+            break;
+        case 5:
+            if (rowVar == row) {
+                goto here;
+            }
+            rowVar++;
+            break;
+        case 6:
+            if (colVar == 1 || rowVar == row) {
+                goto here;
+            }
+            colVar--;
+            rowVar++;
+            break;
+        case 7:
+            if (colVar == 1) {
+                goto here;
+            }
+            colVar--;
+            break;
+        case 8:
+            if (colVar == 1 || rowVar == 1) {
+                goto here;
+            }
+            colVar--;
+            rowVar--;
+            break;
+    }
+    int res = rowVar * 1000 + colVar;
+    return res;
 }
