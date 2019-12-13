@@ -4,20 +4,28 @@
 #include <stdbool.h>
 #include <time.h>
 
+int row, column;
+int sheriffNum, copsNum=0, maxCops=0;
+//sheriffNum and copsNum and maxCops are global variable
+
 int rand_row();
 int rand_column();
 int isDuplicate(int, int *, int);
-int RobberMove(int);
-
-int row, column;
-int sheriffNum, copsNum=0, maxCops=0;
+int RandMove(int);
+int firstEndCondition(int *, int);
+int robberSeen(int , int);
+int smartMove(int, int);
 
 int main() {
+    //for random generating!
+    srand(time(NULL));
+
     printf("Please enter dimensions of game environment as follow:\nrow column\n");
     scanf("%d %d", &row, &column);
     printf("Please enter number of Sheriff:\n");
     scanf("%d", &sheriffNum);
     int sheriff[sheriffNum];
+    int sheriffState[sheriffNum];
     for(int i=0;i<sheriffNum;i++){
         printf("Please enter number of Cops in s sheriff:\n");
         scanf("%d", &sheriff[i]);
@@ -26,8 +34,8 @@ int main() {
     }
     //define a array for duplicate check
     int poses[copsNum];
-
     int sheriffStation[sheriffNum][maxCops];
+
     static int count=0;
     for(int i=0;i<sheriffNum;i++){
         for(int j=0;j<sheriff[i];j++){
@@ -41,30 +49,69 @@ int main() {
             }
         }
     }
-    /*printf("\n");
+    printf("\n");
     for(int i=0;i<sheriffNum;i++){
         for(int j=0;j<sheriff[i];j++){
             printf("%d\n", sheriffStation[i][j]);
         }
-    }*/
+    }
     int robberPos;
     do{
         robberPos= rand_row()*1000+ rand_column();
     }while(isDuplicate(count+1, poses, robberPos));
     printf("\n%d\n", robberPos);
 
-    robberPos= RobberMove(robberPos);
-    printf("%d",robberPos);
+    for(int i=0;i<sheriffNum;i++){
+        for(int j=0;j<sheriff[i];j++){
+            if(robberSeen(sheriffStation[i][j], robberPos)){
+                sheriffState[i]=1;
+            }else{
+                sheriffState[i]=0;
+            }
+        }
+    }
+
+    int formerRobberPos=robberPos;
+    robberPos= RandMove(robberPos);
+    printf("%d\n",robberPos);
+    if(firstEndCondition(poses, robberPos)){
+        printf("Arrested the robber");
+        return 0;
+    }
+    int counter=0;
+    for(int i=0;i<sheriffNum;i++){
+        for(int j=0;j<sheriff[i];j++){
+            if(sheriffState[i]==1){
+                do{
+                sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
+                poses[counter]= sheriffStation[i][j];
+                }while(isDuplicate(counter, poses, poses[counter]));
+            }else{
+                do{
+                sheriffStation[i][j]= RandMove(sheriffStation[i][j]);
+                poses[counter]= sheriffStation[i][j];
+                }while(isDuplicate(counter, poses, poses[counter]));
+            }
+            counter++;
+        }
+    }
+    printf("\n");
+    //for loop for test
+    for(int i=0;i<sheriffNum;i++){
+        printf("%d\n", sheriffState[i]);
+    }
+    printf("\n");
+    for(int i=0;i<counter;i++){
+        printf("%d\n", poses[i]);
+    }
     return 0;
 }
 
 int rand_row(){
-    //srand(time(NULL));
     return ((float)rand()/RAND_MAX)*(row-1)+1;
 }
 
 int rand_column(){
-    //srand(time(NULL));
     return ((float)rand()/RAND_MAX)*(column-1)+1;
 }
 
@@ -79,13 +126,13 @@ int isDuplicate(int count, int *ptr, int value){
     return 0;
 }
 
-int RobberMove(int robberPos) {
+int RandMove(int Pos) {
     here:
     ;
     int move;
     move = (int) (((float) rand() / RAND_MAX) * 8) + 1;
-    int colVar = robberPos % 1000;
-    int rowVar = robberPos / 1000;
+    int colVar = Pos % 1000;
+    int rowVar = Pos / 1000;
     switch (move) {
         case 1:
             if (rowVar == 1) {
@@ -141,5 +188,54 @@ int RobberMove(int robberPos) {
             break;
     }
     int res = rowVar * 1000 + colVar;
+    return res;
+}
+
+int firstEndCondition(int poses[], int robberPos){
+    for(int i=0;i<copsNum;i++){
+        if(robberPos == poses[i]){
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int robberSeen(int copsPos, int robPos){
+    int colVarRob = robPos % 1000;
+    int colVarCops= copsPos % 1000;
+
+    int rowVarRob = robPos / 1000;
+    int rowVarCops= copsPos / 1000;
+
+    if(rowVarCops == rowVarRob){
+        return 0;
+    }else{
+        if((colVarCops-colVarRob)/(rowVarCops-rowVarRob)==1){
+            return 1;
+        }else{
+            return 0;
+        }
+    }
+}
+
+int smartMove(int currentPos, int robberPos){
+    int colVarRob = robberPos % 1000;
+    int colVarCops= currentPos % 1000;
+
+    int rowVarRob = robberPos / 1000;
+    int rowVarCops= currentPos / 1000;
+
+    if(colVarRob > colVarCops){
+        colVarCops++;
+    }else if(colVarRob < colVarCops){
+        colVarCops--;
+    }
+
+    if(rowVarRob > rowVarCops){
+        rowVarCops++;
+    }else if(rowVarRob < rowVarCops){
+        rowVarCops--;
+    }
+    int res = rowVarCops*1000+colVarCops;
     return res;
 }
