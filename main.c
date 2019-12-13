@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include <unistd.h>
 
 int row, column;
 int sheriffNum, copsNum=0, maxCops=0;
@@ -15,6 +16,7 @@ int RandMove(int);
 int firstEndCondition(int *, int);
 int robberSeen(int , int);
 int smartMove(int, int);
+void visualMap(int *,int *, int);
 
 int main() {
     //for random generating!
@@ -49,60 +51,71 @@ int main() {
             }
         }
     }
-    printf("\n");
+    /*printf("\n");
     for(int i=0;i<sheriffNum;i++){
         for(int j=0;j<sheriff[i];j++){
             printf("%d\n", sheriffStation[i][j]);
         }
-    }
+    }*/
     int robberPos;
     do{
         robberPos= rand_row()*1000+ rand_column();
     }while(isDuplicate(count+1, poses, robberPos));
-    printf("\n%d\n", robberPos);
+    //printf("\n%d\n", robberPos);
 
-    for(int i=0;i<sheriffNum;i++){
-        for(int j=0;j<sheriff[i];j++){
-            if(robberSeen(sheriffStation[i][j], robberPos)){
-                sheriffState[i]=1;
-            }else{
-                sheriffState[i]=0;
+    while(1){
+        for(int i=0;i<sheriffNum;i++){
+            for(int j=0;j<sheriff[i];j++){
+                if(robberSeen(sheriffStation[i][j], robberPos)){
+                    sheriffState[i]=1;
+                }else{
+                    sheriffState[i]=0;
+                }
             }
         }
-    }
 
-    int formerRobberPos=robberPos;
-    robberPos= RandMove(robberPos);
-    printf("%d\n",robberPos);
-    if(firstEndCondition(poses, robberPos)){
-        printf("Arrested the robber");
-        return 0;
-    }
-    int counter=0;
-    for(int i=0;i<sheriffNum;i++){
-        for(int j=0;j<sheriff[i];j++){
-            if(sheriffState[i]==1){
-                do{
-                sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
-                poses[counter]= sheriffStation[i][j];
-                }while(isDuplicate(counter, poses, poses[counter]));
-            }else{
-                do{
-                sheriffStation[i][j]= RandMove(sheriffStation[i][j]);
-                poses[counter]= sheriffStation[i][j];
-                }while(isDuplicate(counter, poses, poses[counter]));
-            }
-            counter++;
+        int formerRobberPos=robberPos;
+        robberPos= RandMove(robberPos);
+        //printf("%d\n",robberPos);
+        if(firstEndCondition(poses, robberPos)){
+            printf("Arrested the robber");
+            return 0;
         }
-    }
-    printf("\n");
-    //for loop for test
-    for(int i=0;i<sheriffNum;i++){
-        printf("%d\n", sheriffState[i]);
-    }
-    printf("\n");
-    for(int i=0;i<counter;i++){
-        printf("%d\n", poses[i]);
+        int counter=0;
+        for(int i=0;i<sheriffNum;i++){
+            for(int j=0;j<sheriff[i];j++){
+                if(sheriffState[i]==1){
+                    do{
+                        sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
+                        poses[counter]= sheriffStation[i][j];
+                    }while(isDuplicate(counter, poses, poses[counter]));
+                }else{
+                    do{
+                        sheriffStation[i][j]= RandMove(sheriffStation[i][j]);
+                        poses[counter]= sheriffStation[i][j];
+                    }while(isDuplicate(counter, poses, poses[counter]));
+                }
+                counter++;
+            }
+        }
+        system("cls");
+        visualMap(poses, sheriff, robberPos);
+        sleep(1);
+        printf("\n");
+        if(firstEndCondition(poses, robberPos)){
+            printf("Arrested the robber");
+            return 0;
+        }
+
+        /*printf("\n");
+        //for loop for test
+        for(int i=0;i<sheriffNum;i++){
+            printf("%d\n", sheriffState[i]);
+        }
+        printf("\n");
+        for(int i=0;i<counter;i++){
+            printf("%d\n", poses[i]);
+        }*/
     }
     return 0;
 }
@@ -238,4 +251,57 @@ int smartMove(int currentPos, int robberPos){
     }
     int res = rowVarCops*1000+colVarCops;
     return res;
+}
+
+void visualMap(int poses[],int sheriff[], int robberPos){
+    int colVarRob = robberPos % 1000;
+    int rowVarRob = robberPos / 1000;
+    int colVarCops;
+    int rowVarCops;
+    int count =0;
+    for(int i=0;i<row;i++){
+        for(int j=0;j<column;j++){
+            bool flag= false;
+            count=0;
+            for(int k=0;k<copsNum;k++){
+                colVarCops= poses[k] % 1000;
+                rowVarCops= poses[k] / 1000;
+                if(colVarCops==j+1 && rowVarCops==i+1){
+                    while(k>=0){
+                        k-=sheriff[count];
+                        count++;
+                    }
+                    flag = true;
+                    break;
+                }
+            }
+            if(flag){
+                if(j==column-1){
+                    if(colVarRob==j+1 && rowVarRob==i+1){
+                        printf("D%d:T\n", count);
+                    }else{
+                        printf("D%d\n", count);
+                    }
+                }else{
+                    if(colVarRob==j+1 && rowVarRob==i+1){
+                        printf("D%d:T\t", count);
+                    }else{
+                        printf("D%d\t", count);
+                    }
+                }
+            }else if(colVarRob==j+1 && rowVarRob==i+1){
+                if(j==column-1){
+                    printf("T\n");
+                }else{
+                    printf("T\t");
+                }
+            }else{
+                if(j==column-1){
+                    printf("*\n");
+                }else{
+                    printf("*\t");
+                }
+            }
+        }
+    }
 }
