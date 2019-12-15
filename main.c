@@ -4,14 +4,64 @@
 #include <stdbool.h>
 #include <time.h>
 #include <unistd.h>
+#include <windows.h>
 
 int row, column;
 int sheriffNum, copsNum=0, maxCops=0;
+int turn=0;
 //sheriffNum and copsNum and maxCops are global variable
+
+//additional code to clear console screen
+//stack over flow
+//start
+/* Standard error macro for reporting API errors */
+#define PERR(bSuccess, api){if(!(bSuccess)) printf("%s:Error %d from %s \
+    on line %d\n", __FILE__, GetLastError(), api, __LINE__);}
+
+void cls( HANDLE hConsole )
+{
+    COORD coordScreen = { 0, 0 };    /* here's where we'll home the
+                                        cursor */
+    BOOL bSuccess;
+    DWORD cCharsWritten;
+    CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
+    DWORD dwConSize;                 /* number of character cells in
+                                        the current buffer */
+
+    /* get the number of character cells in the current buffer */
+
+    bSuccess = GetConsoleScreenBufferInfo( hConsole, &csbi );
+    PERR( bSuccess, "GetConsoleScreenBufferInfo" );
+    dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+
+    /* fill the entire screen with blanks */
+
+    bSuccess = FillConsoleOutputCharacter( hConsole, (TCHAR) ' ',
+                                           dwConSize, coordScreen, &cCharsWritten );
+    PERR( bSuccess, "FillConsoleOutputCharacter" );
+
+    /* get the current text attribute */
+
+    bSuccess = GetConsoleScreenBufferInfo( hConsole, &csbi );
+    PERR( bSuccess, "ConsoleScreenBufferInfo" );
+
+    /* now set the buffer's attributes accordingly */
+
+    bSuccess = FillConsoleOutputAttribute( hConsole, csbi.wAttributes,
+                                           dwConSize, coordScreen, &cCharsWritten );
+    PERR( bSuccess, "FillConsoleOutputAttribute" );
+
+    /* put the cursor at (0, 0) */
+
+    bSuccess = SetConsoleCursorPosition( hConsole, coordScreen );
+    PERR( bSuccess, "SetConsoleCursorPosition" );
+    return;
+}
+//end
 
 int rand_row();
 int rand_column();
-int isDuplicate(int, int *, int, int);
+int isDuplicate(int, int *, int);
 int RandMove(int);
 int firstEndCondition(int *, int);
 int robberSeen(int , int);
@@ -29,7 +79,7 @@ int main() {
     int sheriff[sheriffNum];
     int sheriffState[sheriffNum];
     for(int i=0;i<sheriffNum;i++){
-        printf("Please enter number of Cops in s sheriff:\n");
+        printf("Please enter number of Cops in a sheriff:\n");
         scanf("%d", &sheriff[i]);
         copsNum+= sheriff[i];
         maxCops= fmax(maxCops, sheriff[i]);
@@ -46,7 +96,7 @@ int main() {
             //printf("%d\n", sheriffStation[i][j]);
             poses[count]=sheriffStation[i][j];
             count++;
-            if (isDuplicate(count, poses, sheriffStation[i][j], robberPos)){
+            if (isDuplicate(count, poses, sheriffStation[i][j])){
                 //printf("her\n");
                 j--;
             }
@@ -60,7 +110,7 @@ int main() {
     }*/
     do{
         robberPos= rand_row()*1000+ rand_column();
-    }while(isDuplicate(count+1, poses, robberPos, robberPos));
+    }while(isDuplicate(count+1, poses, robberPos));
     //printf("\n%d\n", robberPos);
 
     int round=1;
@@ -81,34 +131,37 @@ int main() {
         robberPos= RandMove(robberPos);
         //printf("%d\n",robberPos);
         if(firstEndCondition(poses, robberPos)){
-            printf("Arrested the robber");
+            printf("Arrested the robber\n");
+            visualMap(poses, sheriff, robberPos);
             return 0;
         }
 
-        printf("\e[1;1H\e[2J");
+        cls( GetStdHandle( STD_OUTPUT_HANDLE ));
         visualMap(poses, sheriff, robberPos);
         sleep(1);
 
         int counter=0;
         for(int i=0;i<sheriffNum;i++){
+            turn=0;
             for(int j=0;j<sheriff[i];j++){
                 if(sheriffState[i]==1){
                     do{
                         sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
                         poses[counter]= sheriffStation[i][j];
-                    }while(isDuplicate(counter, poses, poses[counter], robberPos));
+                    }while(isDuplicate(counter, poses, poses[counter]));
                 }else{
                     do{
                         sheriffStation[i][j]= RandMove(sheriffStation[i][j]);
                         poses[counter]= sheriffStation[i][j];
-                    }while(isDuplicate(counter, poses, poses[counter], robberPos));
+                    }while(isDuplicate(counter, poses, poses[counter]));
                 }
                 counter++;
             }
         }
         printf("\n");
         if(firstEndCondition(poses, robberPos)){
-            printf("Arrested the robber");
+            printf("Arrested the robber\n");
+            visualMap(poses, sheriff, robberPos);
             return 0;
         }
 
@@ -133,13 +186,14 @@ int rand_column(){
     return ((float)rand()/RAND_MAX)*(column-1)+1;
 }
 
-int isDuplicate(int count, int *ptr, int value, int robberPos){
-    bool flag= true;
+int isDuplicate(int count, int *ptr, int value){
+    //static counter =0;
+    //count++;
+    //bool flag= true;
     for(int i=0;i<count-1;i++){
         //printf("%d, %d\n", *ptr, value);
-        /*if((fabs(ptr[i]%1000 - robberPos%1000)<2 || fabs(ptr[i]/1000 - robberPos/1000)<2) && flag){
-            flag= false;
-            return 1;
+        /*if(counter >2 && value==robberPos){
+            return 0;
         }*/
         if(*(ptr+i)==value){
 //            printf("ter\n");
@@ -265,6 +319,12 @@ int smartMove(int currentPos, int robberPos){
         rowVarCops--;
     }
     int res = rowVarCops*1000+colVarCops;
+    if(res==robberPos && turn==0){
+        turn++;
+        return res;
+    }else{
+        return currentPos;
+    }
     return res;
 }
 
