@@ -8,7 +8,7 @@
 
 int row, column;
 int sheriffNum, copsNum=0, maxCops=0;
-int turn=0;
+int turn1=0;
 //sheriffNum and copsNum and maxCops are global variable
 
 //additional code to clear console screen
@@ -142,18 +142,19 @@ int main() {
 
         int counter=0;
         for(int i=0;i<sheriffNum;i++){
-            turn=0;
+            turn1=0;
             for(int j=0;j<sheriff[i];j++){
                 if(sheriffState[i]==1){
                     do{
                         sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
                         poses[counter]= sheriffStation[i][j];
+                        turn1++;
                     }while(isDuplicate(counter, poses, poses[counter]));
                 }else{
                     do{
                         sheriffStation[i][j]= RandMove(sheriffStation[i][j]);
                         poses[counter]= sheriffStation[i][j];
-                    }while(isDuplicate(counter, poses, poses[counter]));
+                    }while(isDuplicate(counter+1, poses, poses[counter]));
                 }
                 counter++;
             }
@@ -186,17 +187,9 @@ int rand_column(){
     return ((float)rand()/RAND_MAX)*(column-1)+1;
 }
 
-int isDuplicate(int count, int *ptr, int value){
-    //static counter =0;
-    //count++;
-    //bool flag= true;
+int isDuplicate(int count, int arr[], int value){
     for(int i=0;i<count-1;i++){
-        //printf("%d, %d\n", *ptr, value);
-        /*if(counter >2 && value==robberPos){
-            return 0;
-        }*/
-        if(*(ptr+i)==value){
-//            printf("ter\n");
+        if(arr[i]==value){
             return 1;
         }
     }
@@ -307,24 +300,37 @@ int smartMove(int currentPos, int robberPos){
     int rowVarRob = robberPos / 1000;
     int rowVarCops= currentPos / 1000;
 
-    if(colVarRob > colVarCops){
-        colVarCops++;
-    }else if(colVarRob < colVarCops){
-        colVarCops--;
+    if(pow((colVarCops-colVarRob), 2) + pow((rowVarCops-rowVarRob), 2)<=2 && turn1){
+        if(colVarRob > colVarCops){
+            colVarCops++;
+        }else if(colVarRob < colVarCops){
+            colVarCops--;
+        }
+
+        if(rowVarRob > rowVarCops){
+            rowVarCops++;
+        }else if(rowVarRob < rowVarCops){
+            rowVarCops--;
+        }
+    }else{
+        int randNum=((float)rand()/RAND_MAX)*2;
+        switch (randNum){
+            case 0:
+                if(colVarRob > colVarCops){
+                    colVarCops++;
+                }else if(colVarRob < colVarCops) {
+                    colVarCops--;
+                }
+            case 1:
+                if(rowVarRob > rowVarCops){
+                    rowVarCops++;
+                }else if(rowVarRob < rowVarCops){
+                    rowVarCops--;
+                }
+        }
     }
 
-    if(rowVarRob > rowVarCops){
-        rowVarCops++;
-    }else if(rowVarRob < rowVarCops){
-        rowVarCops--;
-    }
     int res = rowVarCops*1000+colVarCops;
-    if(res==robberPos && turn==0){
-        turn++;
-        return res;
-    }else{
-        return currentPos;
-    }
     return res;
 }
 
@@ -378,5 +384,8 @@ void visualMap(int poses[],int sheriff[], int robberPos){
                 }
             }
         }
+    }
+    for(int i=0;i<copsNum;i++){
+        printf("%d\n",poses[i]);
     }
 }
