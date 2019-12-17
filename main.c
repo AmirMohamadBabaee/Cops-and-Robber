@@ -59,8 +59,6 @@ void cls( HANDLE hConsole )
 }
 //end
 
-int rand_row();
-int rand_column();
 int isDuplicate(int, int *, int);
 int RandMove(int);
 int firstEndCondition(int *, int);
@@ -92,7 +90,7 @@ int main() {
     static int count=0;
     for(int i=0;i<sheriffNum;i++){
         for(int j=0;j<sheriff[i];j++){
-            sheriffStation[i][j]=rand_row()*1000+ rand_column();
+            sheriffStation[i][j]=(rand()%(row-1)+1)*1000+ (rand()%(column-1)+1);
             //printf("%d\n", sheriffStation[i][j]);
             poses[count]=sheriffStation[i][j];
             count++;
@@ -109,7 +107,7 @@ int main() {
         }
     }*/
     do{
-        robberPos= rand_row()*1000+ rand_column();
+        robberPos= (rand()%(row-1)+1)*1000+ (rand()%(column-1)+1);
     }while(isDuplicate(count+1, poses, robberPos));
     //printf("\n%d\n", robberPos);
 
@@ -177,14 +175,6 @@ int main() {
         }*/
     }
     return 0;
-}
-
-int rand_row(){
-    return ((float)rand()/RAND_MAX)*(row-1)+1;
-}
-
-int rand_column(){
-    return ((float)rand()/RAND_MAX)*(column-1)+1;
 }
 
 int isDuplicate(int count, int arr[], int value){
