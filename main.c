@@ -63,8 +63,10 @@ int isDuplicate(int, int *, int);
 int RandMove(int);
 int firstEndCondition(int *, int);
 int robberSeen(int , int);
-int smartMove(int, int);
+int smartMove(int *,int, int);
 void visualMap(int *,int *, int);
+//copied from StackOverFlow
+void SetColor(int);
 
 int main() {
     //for random generating!
@@ -96,25 +98,18 @@ int main() {
             count++;
             if (isDuplicate(count, poses, sheriffStation[i][j])){
                 //printf("her\n");
+                count--;
                 j--;
             }
         }
     }
-    /*printf("\n");
-    for(int i=0;i<sheriffNum;i++){
-        for(int j=0;j<sheriff[i];j++){
-            printf("%d\n", sheriffStation[i][j]);
-        }
-    }*/
+
     do{
         robberPos= (rand()%(row-1)+1)*1000+ (rand()%(column-1)+1);
     }while(isDuplicate(count+1, poses, robberPos));
-    //printf("\n%d\n", robberPos);
 
     int round=1;
     while(1){
-        printf("round %d:\n", round);
-        round++;
         for(int i=0;i<sheriffNum;i++){
             for(int j=0;j<sheriff[i];j++){
                 if(robberSeen(sheriffStation[i][j], robberPos)){
@@ -127,16 +122,19 @@ int main() {
 
         int formerRobberPos=robberPos;
         robberPos= RandMove(robberPos);
-        //printf("%d\n",robberPos);
         if(firstEndCondition(poses, robberPos)){
+            round++;
+            printf("time %d:", round);
             printf("Arrested the robber\n");
             visualMap(poses, sheriff, robberPos);
             return 0;
         }
 
         cls( GetStdHandle( STD_OUTPUT_HANDLE ));
+        printf("time %d:\n", round);
+        round++;
         visualMap(poses, sheriff, robberPos);
-        sleep(1);
+        usleep(500000);
 
         int counter=0;
         for(int i=0;i<sheriffNum;i++){
@@ -144,7 +142,7 @@ int main() {
             for(int j=0;j<sheriff[i];j++){
                 if(sheriffState[i]==1){
                     do{
-                        sheriffStation[i][j]= smartMove(sheriffStation[i][j], formerRobberPos);
+                        sheriffStation[i][j]= smartMove(poses, sheriffStation[i][j], formerRobberPos);
                         poses[counter]= sheriffStation[i][j];
                         turn1++;
                     }while(isDuplicate(counter, poses, poses[counter]));
@@ -159,20 +157,12 @@ int main() {
         }
         printf("\n");
         if(firstEndCondition(poses, robberPos)){
+            round++;
+            printf("time %d:", round);
             printf("Arrested the robber\n");
             visualMap(poses, sheriff, robberPos);
             return 0;
         }
-
-        /*printf("\n");
-        //for loop for test
-        for(int i=0;i<sheriffNum;i++){
-            printf("%d\n", sheriffState[i]);
-        }
-        printf("\n");
-        for(int i=0;i<counter;i++){
-            printf("%d\n", poses[i]);
-        }*/
     }
     return 0;
 }
@@ -272,57 +262,52 @@ int robberSeen(int copsPos, int robPos){
     }else{
         return 0;
     }
-    /*if(rowVarCops == rowVarRob){
-        return 0;
-    }else{
-        if((colVarCops-colVarRob)/(rowVarCops-rowVarRob)==1){
-            return 1;
-        }else{
-            return 0;
-        }
-    }*/
 }
 
-int smartMove(int currentPos, int robberPos){
+int smartMove(int *poses, int currentPos, int robberPos){
     int colVarRob = robberPos % 1000;
     int colVarCops= currentPos % 1000;
 
     int rowVarRob = robberPos / 1000;
     int rowVarCops= currentPos / 1000;
 
-    if(pow((colVarCops-colVarRob), 2) + pow((rowVarCops-rowVarRob), 2)<=2 && turn1){
-        if(colVarRob > colVarCops){
-            colVarCops++;
-        }else if(colVarRob < colVarCops){
-            colVarCops--;
-        }
+    if(colVarRob > colVarCops){
+        colVarCops++;
+    }else if(colVarRob < colVarCops){
+        colVarCops--;
+    }
 
-        if(rowVarRob > rowVarCops){
-            rowVarCops++;
-        }else if(rowVarRob < rowVarCops){
-            rowVarCops--;
-        }
-    }else{
-        int randNum=((float)rand()/RAND_MAX)*2;
-        switch (randNum){
-            case 0:
-                if(colVarRob > colVarCops){
-                    colVarCops++;
-                }else if(colVarRob < colVarCops) {
-                    colVarCops--;
-                }
-            case 1:
-                if(rowVarRob > rowVarCops){
-                    rowVarCops++;
-                }else if(rowVarRob < rowVarCops){
-                    rowVarCops--;
-                }
-        }
+    if(rowVarRob > rowVarCops){
+        rowVarCops++;
+    }else if(rowVarRob < rowVarCops){
+        rowVarCops--;
     }
 
     int res = rowVarCops*1000+colVarCops;
+    while(isDuplicate(copsNum, poses, res)){
+        res = RandMove(currentPos);
+    }
+
     return res;
 }
+
+//copied from StackOverFlow
+void SetColor(int ForgC){
+    WORD wColor;
+
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    //We use csbi for the wAttributes word.
+    if(GetConsoleScreenBufferInfo(hStdOut, &csbi))
+    {
+        //Mask out all but the background attribute, and add in the forgournd     color
+        wColor = (csbi.wAttributes & 0xF0) + (ForgC & 0x0F);
+        SetConsoleTextAttribute(hStdOut, wColor);
+    }
+    return;
+}
+
 
 void visualMap(int poses[],int sheriff[], int robberPos){
     int colVarRob = robberPos % 1000;
@@ -361,6 +346,7 @@ void visualMap(int poses[],int sheriff[], int robberPos){
                     }
                 }
             }else if(colVarRob==j+1 && rowVarRob==i+1){
+                SetColor(14);
                 if(j==column-1){
                     printf("T\n");
                 }else{
@@ -373,9 +359,7 @@ void visualMap(int poses[],int sheriff[], int robberPos){
                     printf("*\t");
                 }
             }
+            SetColor(15);
         }
-    }
-    for(int i=0;i<copsNum;i++){
-        printf("%d\n",poses[i]);
     }
 }
