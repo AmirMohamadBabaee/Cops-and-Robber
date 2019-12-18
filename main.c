@@ -9,6 +9,20 @@
 int row, column;
 int sheriffNum, copsNum=0, maxCops=0;
 int turn1=0;
+
+#define ANSI_COLOR_RED "\x1b[31m"
+
+#define ANSI_COLOR_GREEN "\x1b[32m"
+
+#define ANSI_COLOR_YELLOW "\x1b[33m"
+
+#define ANSI_COLOR_BLUE "\x1b[34m"
+
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+
+#define ANSI_COLOR_CYAN "\x1b[36m"
+
+#define ANSI_COLOR_RESET "\x1b[0m"
 //sheriffNum and copsNum and maxCops are global variable
 
 //additional code to clear console screen
@@ -65,8 +79,6 @@ int firstEndCondition(int *, int);
 int robberSeen(int , int);
 int smartMove(int *,int, int);
 void visualMap(int *,int *, int);
-//copied from StackOverFlow
-void SetColor(int);
 
 int main() {
     //for random generating!
@@ -123,15 +135,15 @@ int main() {
         int formerRobberPos=robberPos;
         robberPos= RandMove(robberPos);
         if(firstEndCondition(poses, robberPos)){
-            round++;
-            printf("time %d:", round);
-            printf("Arrested the robber\n");
+            printf("time %d:\n", round);
+            printf("Arrested the robber\n\n");
+            printf("\a");
             visualMap(poses, sheriff, robberPos);
             return 0;
         }
 
         cls( GetStdHandle( STD_OUTPUT_HANDLE ));
-        printf("time %d:\n", round);
+        printf("time %d:\n\n", round);
         round++;
         visualMap(poses, sheriff, robberPos);
         usleep(500000);
@@ -157,9 +169,9 @@ int main() {
         }
         printf("\n");
         if(firstEndCondition(poses, robberPos)){
-            round++;
-            printf("time %d:", round);
-            printf("Arrested the robber\n");
+            printf("time %d:\n", round);
+            printf("Arrested the robber\n\n");
+            printf("\a");
             visualMap(poses, sheriff, robberPos);
             return 0;
         }
@@ -291,24 +303,6 @@ int smartMove(int *poses, int currentPos, int robberPos){
     return res;
 }
 
-//copied from StackOverFlow
-void SetColor(int ForgC){
-    WORD wColor;
-
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO csbi;
-
-    //We use csbi for the wAttributes word.
-    if(GetConsoleScreenBufferInfo(hStdOut, &csbi))
-    {
-        //Mask out all but the background attribute, and add in the forgournd     color
-        wColor = (csbi.wAttributes & 0xF0) + (ForgC & 0x0F);
-        SetConsoleTextAttribute(hStdOut, wColor);
-    }
-    return;
-}
-
-
 void visualMap(int poses[],int sheriff[], int robberPos){
     int colVarRob = robberPos % 1000;
     int rowVarRob = robberPos / 1000;
@@ -334,32 +328,30 @@ void visualMap(int poses[],int sheriff[], int robberPos){
             if(flag){
                 if(j==column-1){
                     if(colVarRob==j+1 && rowVarRob==i+1){
-                        printf("D%d:T\n", count);
+                        printf("D%d:T\n\n\n", count);
                     }else{
-                        printf("D%d\n", count);
+                        printf("D%d\n\n\n", count);
                     }
                 }else{
                     if(colVarRob==j+1 && rowVarRob==i+1){
-                        printf("D%d:T\t", count);
+                        printf(ANSI_COLOR_RED"D%d:T\t"ANSI_COLOR_RESET, count);
                     }else{
-                        printf("D%d\t", count);
+                        printf(ANSI_COLOR_RED"D%d\t"ANSI_COLOR_RESET, count);
                     }
                 }
             }else if(colVarRob==j+1 && rowVarRob==i+1){
-                SetColor(14);
                 if(j==column-1){
-                    printf("T\n");
+                    printf(ANSI_COLOR_BLUE"T\n\n\n"ANSI_COLOR_RESET);
                 }else{
-                    printf("T\t");
+                    printf(ANSI_COLOR_BLUE"T\t"ANSI_COLOR_RESET);
                 }
             }else{
                 if(j==column-1){
-                    printf("*\n");
+                    printf(ANSI_COLOR_YELLOW"*\n\n\n"ANSI_COLOR_RESET);
                 }else{
-                    printf("*\t");
+                    printf(ANSI_COLOR_YELLOW"*\t"ANSI_COLOR_RESET);
                 }
             }
-            SetColor(15);
         }
     }
 }
