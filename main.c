@@ -78,6 +78,9 @@ int RandMove(int);
 int firstEndCondition(int *, int);
 int robberSeen(int , int);
 int smartMove(int *,int, int);
+int smartRobber(int, int *);
+int checkMove(int , int);
+void checkRob(int, int *, int *);
 void visualMap(int *,int *, int);
 
 int main() {
@@ -131,9 +134,10 @@ int main() {
                 }
             }
         }
-
+        int nearRob[8]={0};
+        checkRob(robberPos, poses, nearRob);
         int formerRobberPos=robberPos;
-        robberPos= RandMove(robberPos);
+        robberPos= checkMove(robberPos, smartRobber(robberPos, nearRob));
         if(firstEndCondition(poses, robberPos)){
             printf("time %d:\n", round);
             printf("Arrested the robber\n\n");
@@ -253,6 +257,108 @@ int RandMove(int Pos) {
     return res;
 }
 
+int checkMove(int Pos , int move){
+    int round;
+    round=0;
+    here:
+    ;
+    round++;
+    if(round>1){
+        return -1;
+    }
+
+    int colVar = Pos % 1000;
+    int rowVar = Pos / 1000;
+    switch (move) {
+        case 1:
+            if (rowVar == 1) {
+                goto here;
+            }
+            rowVar--;
+            break;
+        case 2:
+            if (colVar == column || rowVar == 1) {
+                goto here;
+            }
+            colVar++;
+            rowVar--;
+            break;
+        case 3:
+            if (colVar == column) {
+                goto here;
+            }
+            colVar++;
+            break;
+        case 4:
+            if (colVar == column || rowVar == row) {
+                goto here;
+            }
+            colVar++;
+            rowVar++;
+            break;
+        case 5:
+            if (rowVar == row) {
+                goto here;
+            }
+            rowVar++;
+            break;
+        case 6:
+            if (colVar == 1 || rowVar == row) {
+                goto here;
+            }
+            colVar--;
+            rowVar++;
+            break;
+        case 7:
+            if (colVar == 1) {
+                goto here;
+            }
+            colVar--;
+            break;
+        case 8:
+            if (colVar == 1 || rowVar == 1) {
+                goto here;
+            }
+            colVar--;
+            rowVar--;
+            break;
+    }
+    int res = rowVar * 1000 + colVar;
+    return res;
+}
+
+void checkRob(int robberPos, int *poses, int nearRob[]){
+    for(int i=0;i<8;i++){
+        for(int j=0;j<copsNum;j++){
+            if(checkMove(robberPos, i+1)==-1) {
+                nearRob[i]= -1;
+                continue;
+            }else if(checkMove(robberPos, i+1)==poses[j]){
+                nearRob[i]= 1;
+            }
+        }
+    }
+}
+
+int smartRobber(int robberPos, int *nearRob){
+    static int index[8]={0};
+    int counter=0;
+    int count=0;
+    for (int i=0;i<8;i++){
+        if(nearRob[i]==0){
+            index[count]=i;
+            count++;
+            counter++;
+        }else{
+            if(counter>2){
+                return i;
+            }
+            counter=0;
+        }
+    }
+    return index[rand()%count];
+}
+
 int firstEndCondition(int poses[], int robberPos){
     for(int i=0;i<copsNum;i++){
         if(robberPos == poses[i]){
@@ -328,13 +434,13 @@ void visualMap(int poses[],int sheriff[], int robberPos){
             if(flag){
                 if(j==column-1){
                     if(colVarRob==j+1 && rowVarRob==i+1){
-                        printf("D%d:T\n\n\n", count);
+                        printf(ANSI_COLOR_GREEN"D%d:T\n\n\n"ANSI_COLOR_RESET, count);
                     }else{
-                        printf("D%d\n\n\n", count);
+                        printf(ANSI_COLOR_RED"D%d\n\n\n"ANSI_COLOR_RESET, count);
                     }
                 }else{
                     if(colVarRob==j+1 && rowVarRob==i+1){
-                        printf(ANSI_COLOR_RED"D%d:T\t"ANSI_COLOR_RESET, count);
+                        printf(ANSI_COLOR_GREEN"D%d:T\t"ANSI_COLOR_RESET, count);
                     }else{
                         printf(ANSI_COLOR_RED"D%d\t"ANSI_COLOR_RESET, count);
                     }
